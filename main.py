@@ -1,43 +1,61 @@
 import tkinter as tk
 
-# --- Original GUI interface code (commented out) ---
-# root = tk.Tk()
-# root.title("Simple GUI")
-# root.mainloop()
-
-# --- Modified GUI with all requirements ---
-def toggle_button_color(button):
-    current_color = button["bg"]
-    new_color = "lightgreen" if current_color == "lightcoral" else "lightcoral"
-    button.config(bg=new_color)
+def display_name():
+    name = entry.get() #Getting input
+    if name=="":
+        output_label.config(text="Please enter a name")
+    else:
+        output_label.config(text=f"Hello, {name}!") #Output to a label
 
 root = tk.Tk()
-root.title("Easter Homework GUI")
-root.geometry("400x300")
-root.configure(bg="lightblue")  # Background for the whole window
+root.title("my ui teehee")
+root.geometry("600x500")
+root.configure(bg="lightblue")
 
-# 1) Labels
-label1 = tk.Label(root, text="Enter your name:", bg="lavender")
+label1 = tk.Label(root, text="Enter name here: ", foreground="red")
 label1.pack(pady=5)
+# Entry (Text box for input)
+entry = tk.Entry(root, width=30)
+entry.pack(pady=10)
 
-# 2) Text Boxes
-entry1 = tk.Entry(root, bg="white")
-entry1.pack(pady=5)
+# Button
+submit_btn = tk.Button(root, text="Submit", command=display_name)
+submit_btn.pack(pady=5)
 
-# 3) Switch Buttons (change color on click)
-button_short = tk.Button(root, text="Short Switch", bg="lightcoral", command=lambda: toggle_button_color(button_short))
-button_short.pack(pady=5)
+# Label (Output)
+output_label = tk.Label(root, text="", foreground="black", background="lightblue", font=("Comic Sans MS", 16, "bold"))
+output_label.pack(pady=10)
 
-button_long = tk.Button(root, text="Long Switch", bg="lightcoral", command=lambda: toggle_button_color(button_long))
-button_long.pack(pady=5)
+def toggle(): #For switch
+    if switch["text"] == "OFF":
+        switch.config(text="ON", bg="lightgreen")
+        print("button is on")
+    else:
+        switch.config(text="OFF", bg="lightcoral")
+        print("button is off")
 
-# 4) Check Boxes
-check_var1 = tk.IntVar()
-check1 = tk.Checkbutton(root, text="Option A", variable=check_var1, bg="lightyellow")
-check1.pack(pady=5)
+switch = tk.Button(root, text="OFF", width=10, bg="lightcoral", command=toggle)
+switch.pack(pady=20)
 
-check_var2 = tk.IntVar()
-check2 = tk.Checkbutton(root, text="Option B", variable=check_var2, bg="lightyellow")
-check2.pack(pady=5)
+label2 = tk.Label(root, text="Is Tracey awesome?:", background="yellow")
+label2.pack()
+
+def show_state():
+    if choice.get() == "Yes":
+        label3.config(text="yeahhh i am!!", background="pink")
+    else:
+        label3.config(text="i think u miss clicked", background="pink")
+
+choice = tk.StringVar(value=None)  # Default is "No"
+
+# Radio Buttons
+checkYes = tk.Radiobutton(root, text="Yes", variable=choice, value="Yes", command=show_state, foreground="orange", background="purple", width=10)
+checkYes.pack()
+
+checkNo = tk.Radiobutton(root, text="No", variable=choice, value="No", command=show_state, foreground="orange", background="purple", width=10)
+checkNo.pack()
+
+label3 = tk.Label(root, text="", background="lightblue", width=20, height=2)
+label3.pack(pady=5)
 
 root.mainloop()
