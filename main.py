@@ -1,61 +1,89 @@
-import tkinter as tk
+import pygame
+from constants import *
+from dungeon_generator import create_dungeon
+import sys
 
-def display_name():
-    name = entry.get() #Getting input
-    if name=="":
-        output_label.config(text="Please enter a name")
-    else:
-        output_label.config(text=f"Hello, {name}!") #Output to a label
+pygame.init()
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+clock = pygame.time.Clock()
+font = pygame.font.SysFont(None, 24)
 
-root = tk.Tk()
-root.title("my ui teehee")
-root.geometry("600x500")
-root.configure(bg="lightblue")
+# -- Choose difficulty
+difficulty = 'hard'  # Change to 'easy' or 'medium' or 'hard'
+settings = DIFFICULTY_SETTINGS[difficulty]
 
-label1 = tk.Label(root, text="Enter name here: ", foreground="red")
-label1.pack(pady=5)
-# Entry (Text box for input)
-entry = tk.Entry(root, width=30)
-entry.pack(pady=10)
+# -- Generate multiple floors
+FLOORS = 3
+dungeons = [create_dungeon(settings['rooms'], settings['min'], settings['max']) for _ in range(FLOORS)]
+current_floor = 0
 
-# Button
-submit_btn = tk.Button(root, text="Submit", command=display_name)
-submit_btn.pack(pady=5)
+# -- Find player start position
+def find_start(grid):
+    for y, row in enumerate(grid):
+        for x, cell in enumerate(row):
+            if cell == '<':
+                return x, y
+    return 1, 1
 
-# Label (Output)
-output_label = tk.Label(root, text="", foreground="black", background="lightblue", font=("Comic Sans MS", 16, "bold"))
-output_label.pack(pady=10)
+player_x, player_y = find_start(dungeons[current_floor])
 
-def toggle(): #For switch
-    if switch["text"] == "OFF":
-        switch.config(text="ON", bg="lightgreen")
-        print("button is on")
-    else:
-        switch.config(text="OFF", bg="lightcoral")
-        print("button is off")
+def draw_grid(grid):
+    for y, row in enumerate(grid):
+        for x, cell in enumerate(row):
+            pygame.draw.rect(screen, COLORS.get(cell, (255, 0, 255)),
+                             (x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE))
 
-switch = tk.Button(root, text="OFF", width=10, bg="lightcoral", command=toggle)
-switch.pack(pady=20)
+def move_player(dx, dy):
+    global player_x, player_y, current_floor
+    new_x = player_x + dx
+    new_y = player_y + dy
+    tile = dungeons[current_floor][new_y][new_x]
+    if tile in ['.', '<', '>']:
+        player_x, player_y = new_x, new_y
+        if tile == '<' and current_floor > 0:
+            current_floor -= 1
+            player_x, player_y = find_start(dungeons[current_floor])
+        elif tile == '>' and current_floor < FLOORS - 1:
+            current_floor += 1
+            player_x, player_y = find_start(dungeons[current_floor])
 
-label2 = tk.Label(root, text="Is Tracey awesome?:", background="yellow")
-label2.pack()
+# -- Main Loop
+running = True
+last_move_time = 0  # Initialize last_move_time
+MOVE_DELAY = 150  # milliseconds between moves
 
-def show_state():
-    if choice.get() == "Yes":
-        label3.config(text="yeahhh i am!!", background="pink")
-    else:
-        label3.config(text="i think u miss clicked", background="pink")
+while running:
+    screen.fill((0, 0, 0))
+    draw_grid(dungeons[current_floor])
+    pygame.draw.rect(screen, COLORS['@'], (player_x * TILE_SIZE, player_y * TILE_SIZE, TILE_SIZE, TILE_SIZE))
 
-choice = tk.StringVar(value=None)  # Default is "No"
+    # Floor label
+    label = font.render(f'Floor {current_floor + 1}', True, (255, 255, 255))
+    screen.blit(label, (10, 10))
 
-# Radio Buttons
-checkYes = tk.Radiobutton(root, text="Yes", variable=choice, value="Yes", command=show_state, foreground="orange", background="purple", width=10)
-checkYes.pack()
+    pygame.display.flip()
 
-checkNo = tk.Radiobutton(root, text="No", variable=choice, value="No", command=show_state, foreground="orange", background="purple", width=10)
-checkNo.pack()
+    # Event loop
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
 
-label3 = tk.Label(root, text="", background="lightblue", width=20, height=2)
-label3.pack(pady=5)
+    # Key movement logic
+    keys = pygame.key.get_pressed()
+    current_time = pygame.time.get_ticks()
+    if current_time - last_move_time > MOVE_DELAY:  # Delay check for move rate
+        if keys[pygame.K_w]:
+            move_player(0, -1)
+            last_move_time = current_time
+        elif keys[pygame.K_s]:
+            move_player(0, 1)
+            last_move_time = current_time
+        elif keys[pygame.K_a]:
+            move_player(-1, 0)
+            last_move_time = current_time
+        elif keys[pygame.K_d]:
+            move_player(1, 0)
+            last_move_time = current_time
 
-root.mainloop()
+pygame.quit()
+sys.exit()
